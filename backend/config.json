@@ -1,0 +1,10 @@
+{
+  "height_cm": 179,
+  "measurements_cm": {},
+  "capture_seconds": 3,
+  "camera": {
+    "orientation": "portrait",
+    "width": 720,
+    "height": 1080
+  }
+}

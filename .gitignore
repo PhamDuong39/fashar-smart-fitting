@@ -3,6 +3,7 @@ backend/.deps/
 backend/.cache/
 backend/models/
 frontend/node_modules/
+frontend/.npm-cache/
 frontend/dist/
 frontend/*.tsbuildinfo
 **/__pycache__/

@@ -1,8 +1,8 @@
-from pathlib import Path
 from urllib.request import urlretrieve
 
+from app.core.paths import MODEL_PATH
+
 MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
-MODEL_PATH = Path(__file__).parent / "models" / "pose_landmarker_lite.task"
 
 
 if __name__ == "__main__":

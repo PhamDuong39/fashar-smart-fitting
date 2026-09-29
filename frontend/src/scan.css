@@ -1,0 +1,100 @@
+.recognition-badge {
+  position: absolute;
+  z-index: 9;
+  top: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 42px);
+  padding: 8px 13px;
+  border: 1px solid #8b6651;
+  border-radius: 20px;
+  background: #251d1be8;
+  color: #f5ccb0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-align: center;
+}
+
+.recognition-badge.recognized {
+  border-color: #62d7b9;
+  background: #10342fe8;
+  color: #b9ffe6;
+}
+
+.recognition-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: #f2a667;
+}
+
+.recognition-badge.recognized .recognition-dot {
+  background: #67ecc5;
+  box-shadow: 0 0 12px #67ecc5;
+}
+
+.scan-visual.recognized { border-color: #74f1d4; box-shadow: 0 0 24px #68e4c11a; }
+
+.scan-countdown {
+  position: absolute;
+  z-index: 9;
+  top: 104px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 125px;
+  padding: 12px 8px;
+  border: 1px solid #6be8c4;
+  border-radius: 12px;
+  background: #08251fdf;
+  color: #c7ffed;
+  text-align: center;
+  box-shadow: 0 8px 26px #0008;
+}
+
+.scan-countdown strong {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid #79f0cd;
+  border-radius: 50%;
+  font: 700 32px 'Space Grotesk', Arial, sans-serif;
+}
+
+.scan-countdown span { font-size: 10px; line-height: 1.35; }
+.stage-instruction { white-space: normal; max-width: calc(100% - 48px); text-align: center; }
+.stage-instruction svg { flex: none; }
+.marker-field input { width: 70px; }
+
+.auto-capture-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #9ae9d3;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.try-button:disabled { background: #36504e; color: #9ab8af; }
+
+.video-layer .three-layer { z-index: 2; pointer-events: none; }
+.video-layer canvas:not(.three-layer) { z-index: 3; pointer-events: none; }
+
+.demo-pose-control { display: flex; gap: 3px; align-items: center; padding: 3px; border: 1px solid #2d514e; border-radius: 8px; background: #102321; }
+.demo-pose-control button { border: 0; border-radius: 5px; background: transparent; color: #8db3aa; padding: 7px 8px; font-size: 10px; white-space: nowrap; }
+.demo-pose-control button.active { background: #2d6c5c; color: #e0fff4; }
+
+.stage-frame.portrait {
+  width: min(100%, 45vh, 720px);
+  aspect-ratio: 2 / 3;
+  min-height: 0;
+  margin-inline: auto;
+}

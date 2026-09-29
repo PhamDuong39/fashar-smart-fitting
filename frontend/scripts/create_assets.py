@@ -6,8 +6,12 @@ import sys
 ROOT = Path(__file__).resolve().parents[1] / "public" / "assets"
 GARMENTS = ROOT / "garments"
 GARMENTS.mkdir(parents=True, exist_ok=True)
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
-from catalog import PRODUCTS  # noqa: E402
+BACKEND = Path(__file__).resolve().parents[2] / "backend"
+DEPS = BACKEND / ".deps"
+if DEPS.exists():
+    sys.path.insert(0, str(DEPS))
+sys.path.insert(0, str(BACKEND))
+from app.features.catalog.data import PRODUCTS  # noqa: E402
 (ROOT.parent / "catalog.json").write_text(json.dumps({"products": PRODUCTS}, ensure_ascii=False), encoding="utf-8")
 
 ITEMS = [
