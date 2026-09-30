@@ -47,10 +47,70 @@ def _visible_midpoint(pose: PoseResult, left: str, right: str) -> np.ndarray:
 def _body_extent(pose: PoseResult) -> float:
     if pose.mask is None:
         raise ValueError("Không có mask cơ thể để đo chiều cao.")
-    rows = np.where((pose.mask > 0.52).sum(axis=1) >= max(5, int(pose.width * 0.01)))[0]
-    if len(rows) < pose.height * 0.45:
+    shoulders = _visible_midpoint(pose, "left_shoulder", "right_shoulder")
+    hips = _visible_midpoint(pose, "left_hip", "right_hip")
+    torso = float(np.linalg.norm(hips - shoulders))
+    shoulder_points = [pose.points.get(name) for name in ("left_shoulder", "right_shoulder")]
+    shoulder_x = [p["x"] * pose.width for p in shoulder_points if p and p["visibility"] >= 0.45]
+    shoulder_span = max(shoulder_x) - min(shoulder_x) if len(shoulder_x) == 2 else 0
+    if torso < pose.height * 0.12:
+        raise ValueError("Không thấy rõ thân người để xác định chiều cao.")
+
+    # Keep only the silhouette connected to the detected torso. Other segmented
+    # objects must not set the top or bottom of the pixel-to-centimetre scale.
+    binary = (pose.mask > 0.52).astype(np.uint8)
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(binary, connectivity=8)
+    center = (shoulders + hips) / 2
+    cx, cy = int(center[0]), int(center[1])
+    x0, x1 = max(0, cx - 12), min(pose.width, cx + 13)
+    y0, y1 = max(0, cy - 12), min(pose.height, cy + 13)
+    nearby = labels[y0:y1, x0:x1]
+    candidates = np.bincount(nearby[nearby > 0], minlength=count)
+    if not candidates.any():
+        raise ValueError("Không xác định được vùng cơ thể quanh thân người.")
+    body_label = int(np.argmax(candidates))
+    if stats[body_label, cv2.CC_STAT_AREA] < pose.height * 3:
+        raise ValueError("Mask cơ thể quá nhỏ để đo chiều cao.")
+    body = labels == body_label
+
+    face = [pose.points.get(name) for name in ("nose", "left_eye", "right_eye", "left_ear", "right_ear")]
+    face = [p for p in face if p and p["visibility"] >= 0.45]
+    if not face:
+        raise ValueError("Không thấy rõ đầu để đo chiều cao. Hãy quét lại.")
+    face_point = min(face, key=lambda p: p["y"])
+    face_x, face_y = face_point["x"] * pose.width, face_point["y"] * pose.height
+    head_reach = max(18, shoulder_span * 0.42, torso * 0.22)
+    head_top = face_y - max(shoulder_span * 0.7, (shoulders[1] - face_y) * 1.5, torso * 0.28)
+
+    def edge_rows(top: float, bottom: float, left: float, right: float) -> np.ndarray:
+        top_i, bottom_i = max(0, int(top)), min(pose.height, int(bottom) + 1)
+        left_i, right_i = max(0, int(left)), min(pose.width, int(right) + 1)
+        if top_i >= bottom_i or left_i >= right_i:
+            return np.empty(0, dtype=int)
+        return np.flatnonzero(body[top_i:bottom_i, left_i:right_i].sum(axis=1) >= 2) + top_i
+
+    head_rows = edge_rows(head_top, shoulders[1], face_x - head_reach, face_x + head_reach)
+    if not len(head_rows) or head_rows[0] >= face_y:
+        raise ValueError("Không xác định được đỉnh đầu trên mask. Hãy quét lại.")
+
+    foot_rows = []
+    foot_reach = max(18, shoulder_span * 0.22, torso * 0.18)
+    for side in ("left", "right"):
+        ankle = pose.points.get(f"{side}_ankle")
+        if not ankle or ankle["visibility"] < 0.45:
+            continue
+        foot = pose.points.get(f"{side}_foot")
+        x = (foot if foot and foot["visibility"] >= 0.45 else ankle)["x"] * pose.width
+        ankle_y = ankle["y"] * pose.height
+        rows = edge_rows(ankle_y - torso * 0.12, ankle_y + torso * 0.35, x - foot_reach, x + foot_reach)
+        if len(rows) and rows[-1] >= ankle_y:
+            foot_rows.append(int(rows[-1]))
+    if not foot_rows:
+        raise ValueError("Không xác định được bàn chân trên mask. Hãy quét lại.")
+    extent = max(foot_rows) - int(head_rows[0])
+    if extent < pose.height * 0.45:
         raise ValueError("Cơ thể chưa đủ trong khung hình.")
-    return float(rows[-1] - rows[0])
+    return float(extent)
 
 
 def _row_width(mask: np.ndarray, y: int, cx: int, reach: int) -> float:
